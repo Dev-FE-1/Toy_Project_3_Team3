@@ -60,6 +60,6 @@ const closeBtn = css`
   background-color: transparent;
   border: none;
   outline: none;
-  padding: 10px;
+  padding: 16px;
   cursor: pointer;
 `;
