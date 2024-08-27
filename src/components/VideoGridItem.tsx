@@ -4,20 +4,23 @@ import { css } from '@emotion/react';
 
 import { colors } from '@/styles/colors';
 
+import User from './User';
+
 interface VideoGridItemProps {
-  src: string;
+  videoId: string; // 비디오 ID 추가
   title: string;
-  user: string; // 사용자 이름 추가
-  thumbnail: string; // 썸네일 이미지 추가
+  user: string;
 }
 
-const VideoGridItem: React.FC<VideoGridItemProps> = ({ title, user, thumbnail }) => {
+const VideoGridItem: React.FC<VideoGridItemProps> = ({ videoId, title }) => {
+  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
   return (
     <div css={gridItemStyle}>
-      <img src={thumbnail} alt={title} css={thumbnailStyle} /> {/* 썸네일 이미지 */}
+      <img src={thumbnailUrl} alt={title} css={thumbnailStyle} />
       <div css={infoStyle}>
         <h3 css={titleStyle}>{title}</h3>
-        <p css={userStyle}>{user}</p>
+        <User profileimage="없음" nickname="손성오" userid="son" onlyImage={false} />
       </div>
       <div css={tagGroupStyle}>
         <div css={tagStyle}>게임</div>
@@ -31,18 +34,19 @@ const VideoGridItem: React.FC<VideoGridItemProps> = ({ title, user, thumbnail })
 
 // 스타일 정의
 const gridItemStyle = css`
-  border: 1px solid #ddd;
   padding: 10px;
-  background-color: #fff;
-  border-radius: 8px;
+  background-color: ${colors.black};
+  border-radius: 10px;
+  height: 250px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const thumbnailStyle = css`
   width: 100%;
-  height: auto;
-  border-bottom: 1px solid #ddd;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
 `;
 
 const infoStyle = css`
@@ -51,34 +55,29 @@ const infoStyle = css`
 `;
 
 const titleStyle = css`
-  margin: 0;
+  margin-bottom: 10px;
+  padding-left: 8px;
   font-size: 16px;
   font-weight: bold;
-  color: ${colors.primaryGreen};
-`;
-
-const userStyle = css`
-  margin: 0;
-  color: #555;
-  font-size: 14px;
+  color: ${colors.white};
 `;
 
 const tagGroupStyle = css`
   display: flex;
-  justify-content: space-between;
-  padding: 10px;
+  justify-content: space-around;
+  padding: 2px;
 `;
 
 const tagStyle = css`
   flex: 1;
   margin: 0 5px;
-  padding: 8px;
+  padding: 4px;
   background-color: transparent;
-  border: 1px solid #ddd;
+  border: 1px solid ${colors.tagBoxGray};
   border-radius: 4px;
   text-align: center;
   font-size: 12px;
-  color: #333;
+  color: ${colors.tagBoxGray};
 
   &:hover {
     background-color: #f0f0f0;
