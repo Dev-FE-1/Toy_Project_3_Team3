@@ -28,14 +28,14 @@ const btn = (size: Size) => css`
   }
   ${size === 'md' &&
   `
-		height: 40px;
-		font-size:15px;
-	`}
+    height: 40px;
+		font-size: 15px;
+  `}
   ${size === 'lg' &&
   `
-		height: 60px;
-		font-size:20px;
-	`}
+    height: 60px;
+		font-size: 20px;
+  `}
 `;
 
 interface ButtonProps {

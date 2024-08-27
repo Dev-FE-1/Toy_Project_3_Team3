@@ -6,11 +6,11 @@ import Button from '@/components/Button';
 import Signin, { realUserData } from '@/components/sign/Signin';
 import Signup from '@/components/sign/Signup';
 import User from '@/components/User';
-import useSignModalStore from '@/stores/useSignModalStore';
+import useModalStore from '@/stores/useModalStore';
 import useUserStore from '@/stores/useUserStore';
 
 function HeaderActions() {
-  const openSigninModal = useSignModalStore((state) => state.openModal);
+  const openModal = useModalStore((state) => state.openModal);
   const user = useUserStore((state) => state.userInformation);
   const { profileimage, nickname, userid } = user.information;
 
@@ -24,7 +24,7 @@ function HeaderActions() {
         </Link>
       ) : (
         <>
-          <div onClick={() => openSigninModal('signin')}>
+          <div onClick={() => openModal('signin')}>
             <Button>로그인</Button>
           </div>
           <Signin />

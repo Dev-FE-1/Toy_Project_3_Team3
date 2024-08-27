@@ -1,4 +1,6 @@
 /** @jsxImportSource @emotion/react */
+import { FormEvent } from 'react';
+
 import Modal from '@/components/Modal';
 import {
   submitBtn,
@@ -6,18 +8,26 @@ import {
   idAndPassword,
   modalMovementBtn,
 } from '@/components/sign/Signin';
-import useSignModalStore from '@/stores/useSignModalStore';
+import useModalStore from '@/stores/useModalStore';
 import { colors } from '@/styles/colors';
 
 const Signup: React.FC = () => {
-  const signinModal = useSignModalStore((state) => state.signModals);
-  const closeSigninModal = useSignModalStore((state) => state.closeModal);
-  const openSigninModal = useSignModalStore((state) => state.openModal);
+  const { isModalOpen, closeModal, openModal } = useModalStore();
+
+  const handleOpenSignin = () => {
+    openModal('signin');
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // 회원가입 로직
+    closeModal('signup');
+  };
 
   const children: React.ReactNode = (
     <>
       <h2 css={{ margin: '50px 0 20px', fontSize: '28px' }}>Sign Up</h2>
-      <form css={{ width: '330px' }}>
+      <form css={{ width: '330px' }} onSubmit={handleSubmit}>
         <div css={idAndPasswordArea}>
           <input css={idAndPassword} type="text" required />
           <label>Name</label>
@@ -39,24 +49,23 @@ const Signup: React.FC = () => {
             All confirmed
           </label>
         </div>
-        <button css={submitBtn} type="submit" onClick={() => closeSigninModal('signup')}>
+        <button css={submitBtn} type="submit">
           Sign Up
         </button>
       </form>
       <p css={{ fontSize: '14px', marginBottom: '40px' }}>
         Want to sign in?
-        <button css={modalMovementBtn} onClick={() => openSigninModal('signin')}>
+        <button css={modalMovementBtn} onClick={handleOpenSignin}>
           Go back to login
         </button>
       </p>
     </>
   );
+
   return (
-    <>
-      {signinModal.modalName === 'signup' && signinModal.modalState ? (
-        <Modal children={children} modalName="signup" />
-      ) : null}
-    </>
+    <Modal modalName="signup" isOpen={isModalOpen('signup')} onClose={() => closeModal('signup')}>
+      {children}
+    </Modal>
   );
 };
 

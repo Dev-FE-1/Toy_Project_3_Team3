@@ -2,21 +2,22 @@
 import { css } from '@emotion/react';
 import { X } from 'lucide-react';
 
-import useSignModalStore from '@/stores/useSignModalStore';
 import { colors } from '@/styles/colors';
 
-interface SignModalProps {
+interface ModalProps {
   children: React.ReactNode;
   modalName: string;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const SignModal = ({ children, modalName }: SignModalProps) => {
-  const closeSignModal = useSignModalStore((state) => state.closeModal);
+const Modal = ({ children, isOpen, onClose }: ModalProps) => {
+  if (!isOpen) return null;
 
   return (
     <div css={wrapper}>
       <div css={loginModalArea}>
-        <button css={closeBtn} onClick={() => closeSignModal(modalName)}>
+        <button css={closeBtn} onClick={onClose}>
           <X css={{ color: '#888' }} />
         </button>
         {children}
@@ -25,7 +26,7 @@ const SignModal = ({ children, modalName }: SignModalProps) => {
   );
 };
 
-export default SignModal;
+export default Modal;
 
 const wrapper = css`
   margin: 0;
@@ -40,6 +41,7 @@ const wrapper = css`
   align-items: center;
   z-index: 1000;
 `;
+
 const loginModalArea = css`
   position: relative;
   width: 480px;
@@ -51,6 +53,7 @@ const loginModalArea = css`
   display: flex;
   align-items: center;
 `;
+
 const closeBtn = css`
   position: absolute;
   right: 0;

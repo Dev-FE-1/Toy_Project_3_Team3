@@ -5,7 +5,7 @@ import { css } from '@emotion/react';
 import axios from 'axios';
 
 import Modal from '@/components/Modal';
-import useSignModalStore from '@/stores/useSignModalStore';
+import useModalStore from '@/stores/useModalStore';
 import useUserStore from '@/stores/useUserStore';
 import { colors } from '@/styles/colors';
 
@@ -30,9 +30,7 @@ export const realUserData: RealUserData | null = storageUserData
   : null;
 
 const Signin: React.FC = () => {
-  const signinModal = useSignModalStore((state) => state.signModals);
-  const openSigninModal = useSignModalStore((state) => state.openModal);
-  const closeSigninModal = useSignModalStore((state) => state.closeModal);
+  const { closeModal, isModalOpen, openModal } = useModalStore();
   const setUserData = useUserStore((state) => state.setUser);
   const idRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -68,7 +66,7 @@ const Signin: React.FC = () => {
                 following: userData.following,
               }),
             );
-            closeSigninModal('signin');
+            closeModal('signin');
             location.reload();
           }
         } catch (error) {
@@ -77,27 +75,33 @@ const Signin: React.FC = () => {
       };
       fetchUserData();
     }
-  }, [loginData, setUserData, closeSigninModal]);
+  }, [loginData, setUserData, closeModal]);
 
-  if (realUserData) {
-    const userData = {
-      information: {
-        _id: realUserData._id,
-        userid: realUserData.userid,
-        password: realUserData.password,
-        profileimage: realUserData.profileimage,
-        nickname: realUserData.nickname,
-      },
-      followers: realUserData.followers,
-      following: realUserData.following,
-    };
-    setUserData(userData);
-  }
+  useEffect(() => {
+    if (realUserData) {
+      const userData = {
+        information: {
+          _id: realUserData._id,
+          userid: realUserData.userid,
+          password: realUserData.password,
+          profileimage: realUserData.profileimage,
+          nickname: realUserData.nickname,
+        },
+        followers: realUserData.followers,
+        following: realUserData.following,
+      };
+      setUserData(userData);
+    }
+  }, [setUserData]);
+
+  const handleOpenSignup = () => {
+    openModal('signup');
+  };
 
   const children: React.ReactNode = (
     <>
       <h2 css={{ margin: '40px 0 20px', fontSize: '28px' }}>Login</h2>
-      <form css={{ width: '330px' }} onSubmit={(e) => onLogin(e)}>
+      <form css={{ width: '330px' }} onSubmit={onLogin}>
         <div css={idAndPasswordArea}>
           <input css={idAndPassword} ref={idRef} type="text" required />
           <label>ID</label>
@@ -123,23 +127,17 @@ const Signin: React.FC = () => {
       </form>
       <p css={{ fontSize: '14px', marginBottom: '40px' }}>
         Don't have an account?
-        <button
-          css={modalMovementBtn}
-          onClick={() => {
-            openSigninModal('signup');
-          }}
-        >
+        <button css={modalMovementBtn} onClick={handleOpenSignup}>
           Sign Up now
         </button>
       </p>
     </>
   );
+
   return (
-    <>
-      {signinModal.modalName === 'signin' && signinModal.modalState ? (
-        <Modal children={children} modalName="signin" />
-      ) : null}
-    </>
+    <Modal modalName="signin" isOpen={isModalOpen('signin')} onClose={() => closeModal('signin')}>
+      {children}
+    </Modal>
   );
 };
 
