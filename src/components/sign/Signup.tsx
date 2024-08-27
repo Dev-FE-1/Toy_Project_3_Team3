@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -23,8 +23,7 @@ interface SignupData {
 }
 
 const Signup: React.FC = () => {
-  const signinModal = useSignModalStore((state) => state.signModals);
-  const openSigninModal = useSignModalStore((state) => state.openModal);
+  const { isModalOpen, closeModal, openModal } = useModalStore();
   const [newUser, setNewUser] = useState<SignupData>({
     nickname: null,
     userid: null,
@@ -43,9 +42,8 @@ const Signup: React.FC = () => {
     });
   };
 
-  const checkbox = document.getElementById('check') as HTMLInputElement;
-
-  const addNewUser = async () => {
+  const addNewUser = useCallback(async () => {
+    const checkbox = document.getElementById('check') as HTMLInputElement;
     if (newUser.userid && newUser.nickname && newUser.password && checkbox?.checked) {
       try {
         const res = await axios.post('/api/register', {
@@ -55,49 +53,58 @@ const Signup: React.FC = () => {
         });
         if (res.status === 201) {
           toast('가입이 완료되었습니다.');
-          openSigninModal('signin');
+          openModal('signin');
+          closeModal('signup');
         }
       } catch (error) {
         console.error(error);
         toast.error('계정 생성 중에 오류가 발생하였습니다. 다시 시도해주세요.');
       }
     }
-  };
+  }, [newUser, openModal, closeModal]);
 
   useEffect(() => {
     const validation = async () => {
+      const checkbox = document.getElementById('check') as HTMLInputElement;
       if (!checkbox?.checked) {
         toast.error('모두 확인하였는지 체크해주세요.');
         return;
       }
-      try {
-        const res = await axios.post('/api/signup/validate', {
-          userid: newUser.userid,
-          nickname: newUser.nickname,
-        });
-        if (res.status === 200) {
-          addNewUser();
-        }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          if (error.response && error.response.status === 400) {
-            const { field } = error.response.data;
-            if (field === 'userid') {
-              toast.error('중복된 ID 입니다.');
-            } else if (field === 'nickname') {
-              toast.error('중복된 닉네임입니다.');
+      if (newUser.userid && newUser.nickname && newUser.password) {
+        try {
+          const res = await axios.post('/api/signup/validate', {
+            userid: newUser.userid,
+            nickname: newUser.nickname,
+          });
+          if (res.status === 200) {
+            addNewUser();
+          }
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            if (error.response && error.response.status === 400) {
+              const { field } = error.response.data;
+              if (field === 'userid') {
+                toast.error('중복된 ID 입니다.');
+              } else if (field === 'nickname') {
+                toast.error('중복된 닉네임입니다.');
+              }
             }
           }
         }
       }
     };
     validation();
-  }, [newUser, addNewUser]);
+  }, [newUser.userid, newUser.nickname, newUser.password, addNewUser]);
+
+  const handleOpenSignin = () => {
+    openModal('signin');
+    closeModal('signup');
+  };
 
   const children: React.ReactNode = (
     <>
       <h2 css={{ margin: '50px 0 20px', fontSize: '28px' }}>Sign Up</h2>
-      <form css={{ width: '330px' }} onSubmit={handleSubmit}>
+      <form css={{ width: '330px' }} onSubmit={onSignup}>
         <div css={idAndPasswordArea}>
           <input css={idAndPassword} ref={nameRef} type="text" required />
           <label>NickName</label>
