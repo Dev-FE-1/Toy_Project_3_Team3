@@ -6,6 +6,7 @@ import { Pencil } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import Button from '@/components/Button';
+import Input from '@/components/Input';
 import Modal from '@/components/Modal';
 import useModalStore from '@/stores/useModalStore';
 import { IUser } from '@/stores/useUserStore';
@@ -72,9 +73,6 @@ const UserProfile: React.FC<ProfileProps> = ({ user }) => {
             following: user.following,
           }),
         );
-
-        // 필요한 경우 상태 관리 스토어를 업데이트 (예시)
-        // setUser({ ...user, information: { profileimage: newProfileImage, nickname: newNickname, password: newPassword } });
 
         handleCloseProfileModal(); // 모달 닫기
       } else {
@@ -145,15 +143,13 @@ const UserProfile: React.FC<ProfileProps> = ({ user }) => {
               <Pencil size={20} color={colors.white} />
             </button>
           </div>
-          <input
-            css={inputStyle}
+          <Input
             type="text"
             value={newNickname}
             onChange={(e) => setNewNickname(e.target.value)}
             placeholder="새 닉네임"
           />
-          <input
-            css={inputStyle}
+          <Input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
@@ -213,7 +209,7 @@ const modalProfileImage = css`
   width: 150px;
   height: 150px;
   border-radius: 50%;
-  background-color: #fff;
+  background-color: ${colors.white};
 `;
 
 const editIconButton = css`
@@ -230,39 +226,4 @@ const editIconButton = css`
   bottom: 0;
   right: 0;
   &:hover {
-    background-color: #00cc75;
-  }
-`;
-
-const inputStyle = css`
-  width: 80%;
-  padding: 12px;
-  font-size: 16px;
-  margin-bottom: 15px;
-  background-color: #333333;
-  border: none;
-  border-radius: 10px;
-  color: white;
-  &::placeholder {
-    color: #888888;
-  }
-`;
-
-const buttonWrapperStyle = css`
-  width: 85%;
-  margin-top: 15px;
-
-  button {
-    width: 100%;
-    font-size: 16px;
     background-color: ${colors.primaryGreen};
-    color: ${colors.white};
-    text-align: center;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    &:hover {
-      background-color: #00cc75;
-    }
-  }
-`;

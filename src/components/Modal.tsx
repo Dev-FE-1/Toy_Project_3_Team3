@@ -3,6 +3,7 @@ import { css } from '@emotion/react';
 import { X } from 'lucide-react';
 
 import { colors } from '@/styles/colors';
+import React from 'react';
 
 interface ModalProps {
   children: React.ReactNode;
@@ -50,7 +51,6 @@ const loginModalArea = css`
   background-color: #1d1d1d;
   border-radius: 15px;
   color: ${colors.white};
-  display: flex;
   align-items: center;
 `;
 
