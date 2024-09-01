@@ -52,7 +52,7 @@ const Timeline: React.FC = () => {
         setPlaylists(result.playlists);
         setHasMore(result.playlists.length > visibleItems); // 추가할 데이터가 있는지 여부 결정
         setLoading(false);
-      } catch (error: any) {
+      } catch (error) {
         if (error instanceof Error) {
           console.error('데이터 요청 오류:', error);
           setError(error.message);
