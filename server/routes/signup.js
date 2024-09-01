@@ -8,9 +8,9 @@ const handleSignup = async (userid, password, nickname, database) => {
       $or: [{ id: userid }, { 'information.nickname': nickname }],
     });
 
-    if (existingUser) {
-      if (existingUser.id === userid) {
-        return { success: false, message: '이미 사용 중인 ID입니다.' };
+    if (foundUser) {
+      if (foundUser.information.userid === userid) {
+        return res.status(400).send({ field: 'userid', message: 'ID is already taken' });
       }
       if (existingUser.information.nickname === nickname) {
         return { success: false, message: '이미 사용 중인 닉네임입니다.' };

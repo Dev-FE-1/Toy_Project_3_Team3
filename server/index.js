@@ -35,7 +35,44 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api/login', loginRoute);
-app.use('/api/signup', signupRoute);
-app.use('/api/youtube', youtubeRoute);
-app.use('/api/timeline', timelineRoute);
+app.use('/api', loginRoute);
+app.use('/api', signupRoute);
+app.use('/api', registerRoute);
+app.use('/api', followersRoute);
+app.use('/api', followingRoute);
+app.use('/api', updateProfileRoute);
+app.use('/api', userProfileRoute);
+app.use('/api', myPlaylistDataRoute);
+app.use('/api', likedPlaylistsRoute);
+app.use('/api', createPlaylistRoute);
+app.use('/api', likePlaylistRoute);
+app.use('/api', commentRoute);
+app.use('/api', getPlaylistRoute);
+app.use('/api', deletePlaylistRoute);
+app.use('/api', updateUserInfoRoute);
+app.use('/api', youtubeRoute);
+
+app.post('/api/register', async (req, res) => {
+  const { userid, password, nickname } = req.body;
+  if (!userid || !password || !nickname) {
+    return res.status(400).send({ message: 'All fields are required' });
+  }
+  try {
+    const newUser = {
+      id: userid,
+      information: {
+        userid,
+        password,
+        profileimage: '',
+        nickname,
+      },
+      like: [],
+      following: [],
+      followers: [],
+    };
+    const result = await database.collection('users').insertOne(newUser);
+    res.status(201).send({ message: 'User registered successfully', userId: result.insertedId });
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
