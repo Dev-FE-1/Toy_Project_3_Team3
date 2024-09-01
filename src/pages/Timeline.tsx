@@ -53,8 +53,13 @@ const Timeline: React.FC = () => {
         setHasMore(result.playlists.length > visibleItems); // 추가할 데이터가 있는지 여부 결정
         setLoading(false);
       } catch (error: any) {
-        console.error('데이터 요청 오류:', error);
-        setError(error.message);
+        if (error instanceof Error) {
+          console.error('데이터 요청 오류:', error);
+          setError(error.message);
+        } else {
+          console.error('알 수 없는 오류:', error);
+          setError('알 수 없는 오류가 발생했습니다.');
+        }
       } finally {
         setLoading(false);
       }
