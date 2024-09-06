@@ -26,6 +26,7 @@ function PlaylistInfo() {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [playlistOwner, setPlaylistOwner] = useState<string | null>(null);
   const [isLike, setIsLike] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(0);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
   const {
@@ -56,32 +57,46 @@ function PlaylistInfo() {
 
   useEffect(() => {
     if (playlistData) {
-      const { link, userId } = playlistData;
+      const { link, userId, like } = playlistData;
       setVideoId(link.map((l) => forkVideoId(l)).join(','));
       setPlaylistOwner(userId);
+      setLikeCount(like);
     }
   }, [playlistData]);
-
-  useEffect(() => {
-    playlistRefetch();
-  }, [isLikeData, playlistRefetch]);
 
   useEffect(() => {
     if (isLikeSuccess && isLikeData !== null) {
       setIsLike(isLikeData);
     }
-  }, [isLikeData, isLikeSuccess, setIsLike, isLike]);
+  }, [isLikeData, isLikeSuccess]);
 
   useEffect(() => {
     if (isFollowingSuccess && isFollowingData !== null) {
       setIsFollowing(isFollowingData);
     }
-  }, [isFollowingData, isFollowingSuccess, setIsFollowing]);
+  }, [isFollowingData, isFollowingSuccess]);
 
   const handleEvent = {
     like() {
-      const type = isLike ? 'likeDelete' : 'likeAdd';
-      mutateForLike({ type, userId: userInformation.userId });
+      const newIsLike = !isLike;
+      const newLikeCount = newIsLike ? likeCount + 1 : likeCount - 1;
+
+      setIsLike(newIsLike);
+      setLikeCount(newLikeCount);
+
+      const type = newIsLike ? 'likeAdd' : 'likeDelete';
+      mutateForLike(
+        { type, userId: userInformation.userId },
+        {
+          onError: () => {
+            setIsLike(!newIsLike);
+            setLikeCount(likeCount);
+          },
+          onSettled: () => {
+            playlistRefetch();
+          },
+        },
+      );
     },
     following() {
       const type = isFollowing ? 'followDelete' : 'follow';
@@ -113,7 +128,7 @@ function PlaylistInfo() {
     return null;
   }
 
-  const { title, tags, content, date, userName, profileImage, userId, like } = playlistData;
+  const { title, tags, content, date, userName, profileImage, userId } = playlistData;
   const videoTitle = youtubeData.items.filter((item) => item.id === playingVideoId)[0].snippet
     .title;
 
@@ -128,10 +143,10 @@ function PlaylistInfo() {
           <Button size="md" onClick={handleEvent.like}>
             <Heart
               size="18"
-              fill={isLike ? colors.primaryGreen : 'transperant'}
+              fill={isLike ? colors.primaryGreen : 'transparent'}
               strokeWidth={isLike ? '0' : '2'}
             />
-            <span>{like}</span>
+            <span>{likeCount}</span>
           </Button>
           <Tags tags={tags} />
         </div>
@@ -139,14 +154,9 @@ function PlaylistInfo() {
 
       <div className="owner">
         <User profileImage={profileImage} nickname={userName} userId={userId} size="lg" />
-        <If test={userId !== userInformation.userId && isFollowing}>
+        <If test={userId !== userInformation.userId}>
           <If.Then>
-            <Button onClick={handleEvent.following}>팔로잉 중</Button>
-          </If.Then>
-        </If>
-        <If test={userId !== userInformation.userId && !isFollowing}>
-          <If.Then>
-            <Button onClick={handleEvent.following}>팔로잉</Button>
+            <Button onClick={handleEvent.following}>{isFollowing ? '팔로잉 중' : '팔로잉'}</Button>
           </If.Then>
         </If>
       </div>

@@ -115,7 +115,7 @@ const Follow: React.FC = () => {
                     팔로우 취소
                   </Button>
                 ) : (
-                  <Button css={profileEditOrFollowerBtn} onClick={() => handleFollow(user.userId)}>
+                  <Button css={FollowerBtn} onClick={() => handleFollow(user.userId)}>
                     팔로우
                   </Button>
                 ))}
@@ -224,6 +224,24 @@ const profileEditOrFollowerBtn = css`
   width: 140px;
   height: 30px;
   background-color: ${colors.gray};
+  color: ${colors.white};
+  font-weight: 500;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  &:hover {
+    background-color: #00cc75;
+  }
+`;
+
+const FollowerBtn = css`
+  width: 140px;
+  height: 30px;
+  background-color: ${colors.primaryGreen};
   color: ${colors.white};
   font-weight: 500;
   border: none;
