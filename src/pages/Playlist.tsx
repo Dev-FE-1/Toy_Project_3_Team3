@@ -9,12 +9,7 @@ import throttle from 'lodash/throttle';
 import Loading from '@/components/Loading';
 import useUserStore from '@/stores/useUserStore';
 import { IPlaylistData } from '@/types/playlistTypes';
-
-interface UserInformation {
-  profileImage: string;
-  userName: string;
-  userId: string;
-}
+import { IUserInformation } from '@/types/userTypes';
 
 const PlaylistPage: React.FC = () => {
   const { userIdParams } = useParams<{ userIdParams: string }>();
@@ -22,7 +17,7 @@ const PlaylistPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [playlists, setPlaylists] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [userInformation, setUserInformation] = useState<UserInformation | null>(null);
+  const [userInformation, setUserInformation] = useState<IUserInformation | null>(null);
   const [titleNickName, setTitleNickName] = useState<string>('');
   const [titleProfileImage, setTitleProfileImage] = useState<string>('');
 

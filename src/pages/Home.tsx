@@ -11,12 +11,7 @@ import { colors } from '@/styles/colors';
 import useUserStore from '@/stores/useUserStore';
 import throttle from 'lodash/throttle';
 import { IPlaylistData } from '@/types/playlistTypes';
-
-interface UserInformation {
-  profileImage: string;
-  userName: string;
-  userId: string;
-}
+import { IUserInformation } from '@/types/userTypes';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +21,7 @@ const Home: React.FC = () => {
   const [playlists, setPlaylists] = useState<IPlaylistData[]>([]);
   const [exploreData, setExploreData] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [userInformation, setUserInformation] = useState<UserInformation | null>(null);
+  const [userInformation, setUserInformation] = useState<IUserInformation | null>(null);
   const [hasMoreExplore, setHasMoreExplore] = useState(true); // 탐색 데이터의 무한 스크롤 상태 관리
   const user = useUserStore((state) => state.userInformation);
 

@@ -16,6 +16,7 @@ export interface IUserInformation {
   password: string;
   profileImage: string;
   nickname: string;
+  userName: string;
 }
 
 export type FollowingFollowers = Omit<IUserInformation, 'password'>;
