@@ -10,18 +10,7 @@ import VideoGridItem from '@/components/VideoGridItem';
 import { colors } from '@/styles/colors';
 import useUserStore from '@/stores/useUserStore';
 import throttle from 'lodash/throttle';
-
-interface PlaylistData {
-  title: string;
-  userId: string;
-  tags: string[];
-  imgUrl: string[];
-  disclosureStatus: boolean;
-  id: string;
-  videoCount: number;
-  nickname: string;
-  profileImage: string;
-}
+import { IPlaylistData } from '@/types/playlistTypes';
 
 interface UserInformation {
   profileImage: string;
@@ -34,8 +23,8 @@ const Home: React.FC = () => {
   const [visibleItems, setVisibleItems] = useState(8); // 타임라인의 초기 항목 수
   const [exploreVisibleItems, setExploreVisibleItems] = useState(8); // 탐색의 초기 항목 수
   const [loading, setLoading] = useState(true); // 초기 로딩 상태
-  const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
-  const [exploreData, setExploreData] = useState<PlaylistData[]>([]);
+  const [playlists, setPlaylists] = useState<IPlaylistData[]>([]);
+  const [exploreData, setExploreData] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userInformation, setUserInformation] = useState<UserInformation | null>(null);
   const [hasMoreExplore, setHasMoreExplore] = useState(true); // 탐색 데이터의 무한 스크롤 상태 관리

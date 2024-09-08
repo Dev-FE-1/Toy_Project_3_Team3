@@ -40,3 +40,15 @@ export interface UserPlyDataStore extends PlaylistDataStore {
   profileImage: string;
   imgUrl: (string | undefined)[];
 }
+
+export interface IPlaylistData {
+  title: string;
+  userId: string;
+  tags: string[];
+  imgUrl: string[];
+  disclosureStatus: boolean;
+  id: string;
+  videoCount: number;
+  nickname: string;
+  profileImage: string;
+}

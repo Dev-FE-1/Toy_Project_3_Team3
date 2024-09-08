@@ -8,18 +8,7 @@ import VideoGridItem from '@/components/VideoGridItem';
 import throttle from 'lodash/throttle';
 import Loading from '@/components/Loading';
 import useUserStore from '@/stores/useUserStore';
-
-interface PlaylistData {
-  title: string;
-  userId: string;
-  tags: string[];
-  imgUrl: string[];
-  disclosureStatus: boolean;
-  id: string;
-  videoCount: number;
-  nickname: string;
-  profileImage: string;
-}
+import { IPlaylistData } from '@/types/playlistTypes';
 
 interface UserInformation {
   profileImage: string;
@@ -31,7 +20,7 @@ const PlaylistPage: React.FC = () => {
   const { userIdParams } = useParams<{ userIdParams: string }>();
   const [visibleItems, setVisibleItems] = useState(8);
   const [loading, setLoading] = useState(false);
-  const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
+  const [playlists, setPlaylists] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userInformation, setUserInformation] = useState<UserInformation | null>(null);
   const [titleNickName, setTitleNickName] = useState<string>('');
@@ -85,7 +74,7 @@ const PlaylistPage: React.FC = () => {
         const result = await response.json();
 
         // 필터링 로직 적용
-        const filteredPlaylists = result.playlists.filter((playlist: PlaylistData) => {
+        const filteredPlaylists = result.playlists.filter((playlist: IPlaylistData) => {
           if (userInformation?.userId === userIdParams) {
             return playlist.userId === userIdParams;
           } else {

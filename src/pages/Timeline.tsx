@@ -8,18 +8,7 @@ import useUserStore from '@/stores/useUserStore';
 import throttle from 'lodash/throttle';
 import EmptyMessage from '@/components/EmptyMessage';
 import Loading from '@/components/Loading';
-
-interface PlaylistData {
-  id: string;
-  title: string;
-  userId: string;
-  tags: string[];
-  imgUrl: string;
-  disclosureStatus: string;
-  videoCount: number;
-  nickname: string;
-  profileImage: string;
-}
+import { IPlaylistData } from '@/types/playlistTypes';
 
 interface UserInformation {
   profileImage: string;
@@ -30,7 +19,7 @@ interface UserInformation {
 const Timeline: React.FC = () => {
   const [visibleItems, setVisibleItems] = useState(16);
   const [loading, setLoading] = useState(false);
-  const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
+  const [playlists, setPlaylists] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [userInformation, setUserInformation] = useState<UserInformation | null>(null);

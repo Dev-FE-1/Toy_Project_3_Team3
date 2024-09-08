@@ -8,18 +8,7 @@ import { useParams } from 'react-router-dom';
 import throttle from 'lodash/throttle';
 import EmptyMessage from '@/components/EmptyMessage';
 import Loading from '@/components/Loading';
-
-interface LikedPlaylistData {
-  title: string;
-  userId: string;
-  tags: string[];
-  imgUrl: string[];
-  disclosureStatus: boolean;
-  id: string;
-  videoCount: number;
-  nickname: string;
-  profileImage: string;
-}
+import { IPlaylistData } from '@/types/playlistTypes';
 
 interface UserInformation {
   profileImage: string;
@@ -30,7 +19,7 @@ interface UserInformation {
 const Like: React.FC = () => {
   const [visibleItems, setVisibleItems] = useState(8);
   const [loading, setLoading] = useState(false);
-  const [likedPlaylists, setLikedPlaylists] = useState<LikedPlaylistData[]>([]);
+  const [likedPlaylists, setLikedPlaylists] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userInformation, setUserInformation] = useState<UserInformation | null>(null);
 
