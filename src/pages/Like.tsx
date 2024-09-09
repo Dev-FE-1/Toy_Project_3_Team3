@@ -5,90 +5,99 @@ import SkeletonGridItem from '@/components/SkeletonGridItem';
 import TitleHeader from '@/components/TitleHeader';
 import VideoGridItem from '@/components/VideoGridItem';
 import { useParams } from 'react-router-dom';
-import throttle from 'lodash/throttle';
 import EmptyMessage from '@/components/EmptyMessage';
 import Loading from '@/components/Loading';
 import { IPlaylistData } from '@/types/playlistTypes';
 import { IUserInformation } from '@/types/userTypes';
+import { useInfinityScrollStore } from '@/stores/useInfinityScrollStore';
 
 const Like: React.FC = () => {
-  const [visibleItems, setVisibleItems] = useState(8);
-  const [loading, setLoading] = useState(false);
   const [likedPlaylists, setLikedPlaylists] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userInformation, setUserInformation] = useState<IUserInformation | null>(null);
-
   const { userId } = useParams<{ userId: string }>();
 
+  const {
+    visibleItems,
+    loading,
+    hasMore,
+    setVisibleItems,
+    setLoading,
+    initializeScroll,
+    resetScrollState,
+  } = useInfinityScrollStore();
+
+  const fetchUserInformation = async () => {
+    if (!userId) {
+      setError('유저 ID가 없습니다.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/profile/${userId}`);
+      if (!response.ok) {
+        throw new Error('사용자 정보를 가져오는 중 오류가 발생했습니다.');
+      }
+      const data = await response.json();
+      setUserInformation(data);
+    } catch (e) {
+      console.error('사용자 정보 요청 오류:', e);
+      setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+  };
+
+  const fetchLikedPlaylists = async () => {
+    if (!userId) {
+      setError('유저 ID가 없습니다.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/likePage/${userId}`);
+      if (!response.ok) {
+        throw new Error('좋아요한 플레이리스트 데이터를 가져오는 중 오류가 발생했습니다.');
+      }
+      const result = await response.json();
+      setLikedPlaylists(result.likedPlaylists);
+      setLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('데이터 요청 오류:', error);
+        setError(error.message);
+      } else {
+        console.error('알 수 없는 오류:', error);
+        setError('알 수 없는 오류가 발생했습니다.');
+      }
+      setLoading(false);
+    }
+  };
+
+  const fetchMoreItems = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setVisibleItems(visibleItems + 8);
+      setLoading(false);
+    }, 500);
+  };
+
   useEffect(() => {
-    const fetchUserInformation = async () => {
-      if (!userId) {
-        setError('유저 ID가 없습니다.');
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/profile/${userId}`);
-        if (!response.ok) {
-          throw new Error('사용자 정보를 가져오는 중 오류가 발생했습니다.');
-        }
-        const data = await response.json();
-        setUserInformation(data);
-      } catch (e) {
-        console.error('사용자 정보 요청 오류:', e);
-        setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
-      }
-    };
-
     fetchUserInformation();
   }, [userId]);
 
   useEffect(() => {
-    const fetchLikedPlaylists = async () => {
-      if (!userId) {
-        setError('유저 ID가 없습니다.');
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/likePage/${userId}`);
-        if (!response.ok) {
-          throw new Error('좋아요한 플레이리스트 데이터를 가져오는 중 오류가 발생했습니다.');
-        }
-        const result = await response.json();
-        setLikedPlaylists(result.likedPlaylists);
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error('데이터 요청 오류:', error);
-          setError(error.message);
-        } else {
-          console.error('알 수 없는 오류:', error);
-          setError('알 수 없는 오류가 발생했습니다.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLikedPlaylists();
   }, [userId]);
 
   useEffect(() => {
-    const throttledHandleScroll = throttle(() => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      if (scrollTop + clientHeight >= scrollHeight - 5 && !loading) {
-        setLoading(true);
-        setTimeout(() => {
-          setVisibleItems((prev) => prev + 8);
-          setLoading(false);
-        }, 500);
-      }
-    }, 500);
+    const cleanup = initializeScroll(fetchMoreItems); // cleanup 함수 받음
+    return () => cleanup(); // cleanup 함수 호출
+  }, [loading, hasMore]);
 
-    window.addEventListener('scroll', throttledHandleScroll);
-    return () => window.removeEventListener('scroll', throttledHandleScroll);
-  }, [loading]);
+  useEffect(() => {
+    // 컴포넌트가 언마운트 될 때 스크롤 상태를 리셋
+    return () => resetScrollState();
+  }, []);
 
   return (
     <div css={containerStyle}>

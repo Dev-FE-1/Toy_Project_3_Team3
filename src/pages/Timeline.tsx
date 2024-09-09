@@ -5,20 +5,28 @@ import SkeletonGridItem from '@/components/SkeletonGridItem';
 import TitleHeader from '@/components/TitleHeader';
 import VideoGridItem from '@/components/VideoGridItem';
 import useUserStore from '@/stores/useUserStore';
-import throttle from 'lodash/throttle';
 import EmptyMessage from '@/components/EmptyMessage';
 import Loading from '@/components/Loading';
 import { IPlaylistData } from '@/types/playlistTypes';
 import { IUserInformation } from '@/types/userTypes';
+import { useInfinityScrollStore } from '@/stores/useInfinityScrollStore';
 
 const Timeline: React.FC = () => {
-  const [visibleItems, setVisibleItems] = useState(16);
-  const [loading, setLoading] = useState(false);
   const [playlists, setPlaylists] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
   const [userInformation, setUserInformation] = useState<IUserInformation | null>(null);
   const user = useUserStore((state) => state.userInformation);
+
+  const {
+    visibleItems,
+    loading,
+    hasMore,
+    setVisibleItems,
+    setLoading,
+    initializeScroll,
+    resetScrollState,
+    setHasMore,
+  } = useInfinityScrollStore(); // zustand 상태 사용
 
   let userId: string | null = null;
 
@@ -30,81 +38,77 @@ const Timeline: React.FC = () => {
     }
   }
 
+  const fetchUserInformation = async () => {
+    if (!userId) {
+      setError('로그인된 사용자가 없습니다.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/profile/${userId}`);
+      if (!response.ok) {
+        throw new Error('사용자 정보를 가져오는 중 오류가 발생했습니다.');
+      }
+      const data = await response.json();
+      setUserInformation(data);
+    } catch (e) {
+      console.error('사용자 정보 요청 오류:', e);
+      setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+  };
+
+  const fetchTimelineData = async () => {
+    if (!userId) {
+      setError('로그인된 사용자가 없습니다.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/timeline/${userId}`);
+      if (!response.ok) {
+        throw new Error('데이터를 가져오는 중 오류가 발생했습니다.');
+      }
+      const result = await response.json();
+      setPlaylists(result.playlists);
+      setHasMore(result.playlists.length > visibleItems);
+      setLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('데이터 요청 오류:', error);
+        setError(error.message);
+      } else {
+        console.error('알 수 없는 오류:', error);
+        setError('알 수 없는 오류가 발생했습니다.');
+      }
+      setLoading(false);
+    }
+  };
+
+  const fetchMoreItems = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setVisibleItems(visibleItems + 8); // 추가 데이터 로드
+      setLoading(false);
+    }, 500);
+  };
+
   useEffect(() => {
-    const fetchUserInformation = async () => {
-      if (!userId) {
-        setError('로그인된 사용자가 없습니다.');
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/profile/${userId}`);
-        if (!response.ok) {
-          throw new Error('사용자 정보를 가져오는 중 오류가 발생했습니다.');
-        }
-        const data = await response.json();
-        setUserInformation(data);
-      } catch (e) {
-        console.error('사용자 정보 요청 오류:', e);
-        setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
-      }
-    };
-
     fetchUserInformation();
   }, [userId]);
 
   useEffect(() => {
-    const fetchTimelineData = async () => {
-      if (!userId) {
-        setError('로그인된 사용자가 없습니다.');
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/timeline/${userId}`);
-        if (!response.ok) {
-          throw new Error('데이터를 가져오는 중 오류가 발생했습니다.');
-        }
-        const result = await response.json();
-        setPlaylists(result.playlists);
-        setHasMore(result.playlists.length > visibleItems);
-        setLoading(false);
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error('데이터 요청 오류:', error);
-          setError(error.message);
-        } else {
-          console.error('알 수 없는 오류:', error);
-          setError('알 수 없는 오류가 발생했습니다.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTimelineData();
   }, [userId, visibleItems]);
 
   useEffect(() => {
-    const throttledHandleScroll = throttle(() => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      if (scrollTop + clientHeight >= scrollHeight - 5 && !loading && hasMore) {
-        setLoading(true);
-        setTimeout(() => {
-          setVisibleItems((prev) => prev + 8);
-          setLoading(false);
-          console.log('추가 데이터 로드 완료, 아이템 수:', visibleItems);
-          if (playlists.length <= visibleItems + 8) {
-            setHasMore(false);
-          }
-        }, 500);
-      }
-    }, 500);
+    const cleanup = initializeScroll(fetchMoreItems); // 스크롤 이벤트 등록 및 cleanup 반환
+    return () => cleanup(); // cleanup 함수 호출하여 이벤트 리스너 제거
+  }, [loading, hasMore]);
 
-    window.addEventListener('scroll', throttledHandleScroll);
-    return () => window.removeEventListener('scroll', throttledHandleScroll);
-  }, [loading, hasMore, visibleItems, playlists.length]);
+  useEffect(() => {
+    return () => resetScrollState(); // 컴포넌트가 언마운트 될 때 스크롤 상태 리셋
+  }, []);
 
   return (
     <div css={containerStyle}>

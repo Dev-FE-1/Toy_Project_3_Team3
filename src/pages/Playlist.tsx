@@ -5,16 +5,14 @@ import { useParams } from 'react-router-dom';
 import SkeletonGridItem from '@/components/SkeletonGridItem';
 import TitleHeader from '@/components/TitleHeader';
 import VideoGridItem from '@/components/VideoGridItem';
-import throttle from 'lodash/throttle';
 import Loading from '@/components/Loading';
 import useUserStore from '@/stores/useUserStore';
 import { IPlaylistData } from '@/types/playlistTypes';
 import { IUserInformation } from '@/types/userTypes';
+import { useInfinityScrollStore } from '@/stores/useInfinityScrollStore'; // Infinity Scroll 상태 사용
 
 const PlaylistPage: React.FC = () => {
   const { userIdParams } = useParams<{ userIdParams: string }>();
-  const [visibleItems, setVisibleItems] = useState(8);
-  const [loading, setLoading] = useState(false);
   const [playlists, setPlaylists] = useState<IPlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userInformation, setUserInformation] = useState<IUserInformation | null>(null);
@@ -22,6 +20,17 @@ const PlaylistPage: React.FC = () => {
   const [titleProfileImage, setTitleProfileImage] = useState<string>('');
 
   const user = useUserStore((state) => state.userInformation);
+
+  const {
+    visibleItems,
+    loading,
+    hasMore,
+    setVisibleItems,
+    setLoading,
+    initializeScroll,
+    resetScrollState,
+    setHasMore,
+  } = useInfinityScrollStore(); // zustand 상태 사용
 
   let userId: string | null = null;
 
@@ -54,65 +63,68 @@ const PlaylistPage: React.FC = () => {
     fetchUserInformation();
   }, [userId]);
 
-  useEffect(() => {
-    const fetchPlaylistData = async () => {
-      if (!userId) {
-        setError('로그인된 사용자가 없습니다.');
-        return;
+  const fetchPlaylistData = async () => {
+    if (!userId) {
+      setError('로그인된 사용자가 없습니다.');
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/playlistPage/${userIdParams}`);
+      if (!response.ok) {
+        throw new Error('플레이리스트 데이터를 가져오는 중 오류가 발생했습니다.');
       }
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/playlistPage/${userIdParams}`);
-        if (!response.ok) {
-          throw new Error('플레이리스트 데이터를 가져오는 중 오류가 발생했습니다.');
-        }
-        const result = await response.json();
+      const result = await response.json();
 
-        // 필터링 로직 적용
-        const filteredPlaylists = result.playlists.filter((playlist: IPlaylistData) => {
-          if (userInformation?.userId === userIdParams) {
-            return playlist.userId === userIdParams;
-          } else {
-            setTitleNickName(playlist.nickname);
-            setTitleProfileImage(playlist.profileImage);
-            return playlist.userId === userIdParams && playlist.disclosureStatus === true;
-          }
-        });
-
-        setPlaylists(filteredPlaylists);
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error('데이터 요청 오류:', error);
-          setError(error.message);
+      const filteredPlaylists = result.playlists.filter((playlist: IPlaylistData) => {
+        if (userInformation?.userId === userIdParams) {
+          return playlist.userId === userIdParams;
         } else {
-          console.error('알 수 없는 오류:', error);
-          setError('알 수 없는 오류가 발생했습니다.');
+          setTitleNickName(playlist.nickname);
+          setTitleProfileImage(playlist.profileImage);
+          return playlist.userId === userIdParams && playlist.disclosureStatus === true;
         }
-      } finally {
-        setLoading(false);
+      });
+
+      setPlaylists(filteredPlaylists);
+      setHasMore(result.playlists.length > visibleItems); // 더 로드할 데이터가 있는지 확인
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('데이터 요청 오류:', error);
+        setError(error.message);
+      } else {
+        console.error('알 수 없는 오류:', error);
+        setError('알 수 없는 오류가 발생했습니다.');
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMoreItems = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setVisibleItems(visibleItems + 8); // 추가 데이터 로드
+      setLoading(false);
+    }, 500);
+  };
+
+  useEffect(() => {
     fetchPlaylistData();
-  }, [userId, userInformation]);
+  }, [userId, userInformation, visibleItems]);
+
+  useEffect(() => {
+    const cleanup = initializeScroll(fetchMoreItems); // 스크롤 이벤트 등록
+    return () => cleanup(); // 컴포넌트 언마운트 시 리스너 제거
+  }, [loading, hasMore]);
+
+  useEffect(() => {
+    return () => resetScrollState(); // 컴포넌트가 언마운트 될 때 스크롤 상태 리셋
+  }, []);
 
   const handleDeleteItem = (index: number) => {
     setPlaylists((prevPlaylists) => prevPlaylists.filter((_, i) => i !== index));
   };
-
-  useEffect(() => {
-    const throttledHandleScroll = throttle(() => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      if (scrollTop + clientHeight >= scrollHeight - 5 && !loading) {
-        setLoading(true);
-        setTimeout(() => {
-          setVisibleItems((prev) => prev + 8);
-          setLoading(false);
-        }, 500);
-      }
-    }, 500);
-    window.addEventListener('scroll', throttledHandleScroll);
-    return () => window.removeEventListener('scroll', throttledHandleScroll);
-  }, [loading]);
 
   const isUserViewingOwnPage = userInformation?.userId === userIdParams;
 
@@ -147,9 +159,9 @@ const PlaylistPage: React.FC = () => {
               videoId={item.id}
               title={item.title}
               user={item.userId}
-              showDelete={isUserViewingOwnPage} // 자신의 페이지일 경우만 삭제 버튼 표시
-              showEdit={isUserViewingOwnPage} // 자신의 페이지일 경우만 수정 버튼 표시
-              showMenuDot={isUserViewingOwnPage} // 자신의 페이지일 경우만 메뉴 표시
+              showDelete={isUserViewingOwnPage}
+              showEdit={isUserViewingOwnPage}
+              showMenuDot={isUserViewingOwnPage}
               tags={item.tags}
               profileImage={item.profileImage}
               userName={item.nickname}
@@ -157,7 +169,7 @@ const PlaylistPage: React.FC = () => {
               imgUrl={item.imgUrl[0]}
               videoCount={item.videoCount}
               index={index}
-              deleteItem={handleDeleteItem} // 삭제 콜백 함수 전달
+              deleteItem={handleDeleteItem}
             />
           );
         })}
